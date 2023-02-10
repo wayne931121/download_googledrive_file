@@ -70,3 +70,101 @@ Example:
 https://drive.google.com/file/d/11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl/view?usp=share_link
 id = 11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl
 ```
+Attention:
+Google Drive Anonymous downloads have a daily limit, if exceed(maybe 4.8GB per file), it will say:
+```html
+Sorry, you can't view or download this file at this time.
+
+Too many users have viewed or downloaded this file recently. Please try accessing the file again later. If the file you are trying to access is particularly large or is shared with many people, it may take up to 24 hours to be able to view or download the file. If you still can't access a file after 24 hours, contact your domain administrator.
+```
+Then, you can provide cookie and add it to headers to log in, not suggest.
+
+You can split file too many small file to solve this problem:<br>
+See here: https://github.com/wayne931121/tensorflow_remove_person_background_project/blob/main/Export_Model_Function.ipynb
+
+https://colab.research.google.com/drive/1rDcVczczKy8IbUnfA4aAVrM_AKSwuJl7
+
+先將檔案或資料夾壓縮成zip檔案並新增一個資料夾，再把zip檔案拆分放到剛新增的資料夾內，並上傳到google drive，最後將google drive資料夾內的檔案一個個個別下載再結合。
+[Google Transform]
+First compress the file or folder into a zip file and add a new folder, then split the zip file into the newly added folder, and upload it to google drive, and finally copy the files in the google drive folder one by one  Individual downloads are then combined.
+
+1.Large File or Folder to Zip File
+2.Add New Folder
+3.Split Zip File to The New Folder(Split Large Zip File to Small Files that <25MB per file. Example one 900MB file to 90 10MB files.)
+4.Upload The New Folder to Google Drive
+5.Use Gdown Download File in Google drive  folder one by one.
+6.Combine Splited File to Zip File
+7.Unzip
+
+On Computer:
+```python
+import os
+import zipfile
+
+def zip(path):
+    zf = zipfile.ZipFile('{}.zip'.format(path), 'w', zipfile.ZIP_DEFLATED)
+   
+    for root, dirs, files in os.walk(path):
+        for file_name in files:
+            zf.write(os.path.join(root, file_name))
+zip(path)
+
+# 為了防止 colab gdown 下載檔案時因檔案過大而出現無法掃描病毒，造成下載失敗。
+def export_for_google_drive(file, target_folder, size = 10*1024*1024):
+    target_folder_files = target_folder+"\\%d"
+    
+    # Make target folder is empty.
+    for e in os.listdir(target_folder):
+        f = target_folder+"\\"+e
+        os.remove(f)
+    
+    # Read source file, then write them to files by numbers.
+    with open(file, "rb") as f:
+        # 每個檔案大小 10MB
+        # size = 10*1024*1024 # 單位 bytes
+        i = 1
+        while True:
+            tmp = f.read(size)
+            
+            if len(tmp)==0 :
+                break
+            
+            with open(target_folder_files%i, "wb") as gf:
+                gf.write(tmp)
+                
+            i += 1
+try:
+    os.mkdir("detection model for google drive")
+except:
+    pass
+# Limit 25MB
+file = "detection_model.zip"
+target = "detection model for google drive"
+export_for_google_drive(file, target, 20*1024*1024)
+```
+On Google Colab:
+```python
+!gdown --no-cookies --folder "ID"
+def export_from_split_file(source_folder, target_file):
+    # create a empty file
+    with open(target_file, "wb") as gf:
+        gf.write(b"")
+    
+    # write all buffers to a new file
+    export = sorted([int(i) for i in os.listdir(source_folder)])
+    # For each source file, we read it, apppending to new file.
+    with open(target_file, "ab") as f:
+        
+        for _ in export:
+            tmp = source_folder+"/"+str(_)
+            
+            with open(tmp, "rb") as f1:
+                tmp = f1.read(-1)
+            
+            f.write(tmp)
+export_from_split_file("detection model for google drive", "detection_model.zip")
+with zipfile.ZipFile("detection_model.zip", 'r') as zip_ref:
+    zip_ref.extractall("/content")
+!rm "detection model for google drive" -r
+!rm "detection_model.zip"
+```
