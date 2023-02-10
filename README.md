@@ -24,9 +24,14 @@ Colab:
 ```cmd
 !git clone https://github.com/wayne931121/download_googledrive_file.git
 !mv download_googledrive_file/download.py download.py
-%run download.py -id 11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl
+%run download.py -id your_file_id
 ```
 ```cmd
+Input:
+!git clone https://github.com/wayne931121/download_googledrive_file.git
+!mv download_googledrive_file/download.py download.py
+%run download.py -id 11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl
+
 Output:
 Cloning into 'download_googledrive_file'...
 remote: Enumerating objects: 6, done.
