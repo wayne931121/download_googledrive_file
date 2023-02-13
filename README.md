@@ -21,12 +21,12 @@ Download Small File:
 python download.py -id your_file_id -small
 ```
 Colab:
-```cmd
+```python
 !git clone https://github.com/wayne931121/download_googledrive_file.git
 !mv download_googledrive_file/download.py download.py
 %run download.py -id your_file_id
 ```
-```cmd
+```python
 Input:
 !git clone https://github.com/wayne931121/download_googledrive_file.git
 !mv download_googledrive_file/download.py download.py
@@ -70,7 +70,7 @@ Example:
 https://drive.google.com/file/d/11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl/view?usp=share_link
 id = 11jGcJIdbR1MNtRct5DOR5Uk0aoICoXRl
 ```
-Attention:
+**Attention:**<br>
 Google Drive Anonymous downloads have a daily limit, if exceed(maybe 4.8GB per file), it will say:
 ```html
 Sorry, you can't view or download this file at this time.
@@ -167,4 +167,32 @@ with zipfile.ZipFile("detection_model.zip", 'r') as zip_ref:
     zip_ref.extractall("/content")
 !rm "detection model for google drive" -r
 !rm "detection_model.zip"
+```
+
+參考：<br>
+https://stackoverflow.com/questions/48257984/how-to-direct-download-large-file-from-google-drive-without-google-drive-cant-s
+```cmd
+https://stackoverflow.com/a/66725805
+printf "${WHITE}Downloading ${fileNames[$i]}${NC}\n"
+curl -L -c mycookie -o temp "https://drive.google.com/uc?export=download&id=${fileLinks[$i]}"
+filesize=$(wc -c temp | awk '{print $1}')
+if [ $filesize -gt 10000 ]; then
+  printf "Finish downloading\n"
+  mv temp "${fileNames[$i]}.tar.gz"
+else
+  content=$(cat temp)
+  for (( j=0; j<$filesize-10; j++)); do
+    if [ "${content:$j:8}" == "confirm=" ]; then
+      for (( k=0; k<10; k++)); do
+        if [ "${content:$j+8+$k:1}" == "&" ]; then
+          token=${content:$j+8:$k}
+        fi
+      done
+    fi
+  done
+  printf "Confirm downloading with token ${token}\n"
+  curl -L -b mycookie -o "${fileNames[$i]}.tar.gz" "https://drive.google.com/uc?export=download&confirm=${token}&id=${fileLinks[$i]}"
+  rm mycookie
+  rm temp
+fi
 ```
